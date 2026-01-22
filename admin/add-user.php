@@ -62,41 +62,51 @@
             //CHeck whether the button is clicked or not
             if(isset($_POST['submit']))
             {
-                //Add the user in Database
-                //echo "Clicked";
-                
-                //1. Get the data from Form
-                $username = $_POST['username'];
-                $email = $_POST['email'];
-                $address = $_POST['address'];
-                $password = md5($_POST['password']);
+                try {
+                    //Add the user in Database
+                    
+                    //1. Get the data from Form
+                    $username = trim($_POST['username']);
+                    $email = trim($_POST['email']);
+                    $address = trim($_POST['address']);
+                    $password = md5($_POST['password']);
 
-                //3. Insert Into Database
+                    //2. Check if email already exists
+                    $collection = $conn->selectCollection('users');
+                    $existingUser = $collection->findOne(['email' => $email]);
+                    
+                    if($existingUser) {
+                        $_SESSION['add'] = "<div class='error'>Email already exists.</div>";
+                        header('location:'.SITEURL.'admin/add-user.php');
+                        exit();
+                    }
 
-                //Create a SQL Query to Save or Add user
-                // For Numerical we do not need to pass value inside quotes '' But for string value it is compulsory to add quotes ''
-                $sql2 = "INSERT INTO tbl_users(username,email, address, password)
-                       VALUES ('$username','$email', '$address', '$password')";
+                    //3. Insert Into MongoDB Database
+                    $result = $collection->insertOne([
+                        'username' => $username,
+                        'email' => $email,
+                        'address' => $address,
+                        'password' => $password
+                    ]);
 
-                //Execute the Query
-                $res2 = mysqli_query($conn, $sql2);
-
-                //CHeck whether data inserted or not
-                //4. Redirect with MEssage to Manage Food page
-                if($res2 == true)
-                {
-                    //Data inserted Successfullly
-                    $_SESSION['add'] = "<div class='success'>user Added Successfully.</div>";
+                    //CHeck whether data inserted or not
+                    //4. Redirect with Message to Manage User page
+                    if($result->getInsertedCount() > 0)
+                    {
+                        //Data inserted Successfully
+                        $_SESSION['add'] = "<div class='success'>User Added Successfully.</div>";
+                        header('location:'.SITEURL.'admin/manage-user.php');
+                    }
+                    else
+                    {
+                        //Failed to Insert Data
+                        $_SESSION['add'] = "<div class='error'>Failed to Add User.</div>";
+                        header('location:'.SITEURL.'admin/manage-user.php');
+                    }
+                } catch (Exception $e) {
+                    $_SESSION['add'] = "<div class='error'>Error: " . $e->getMessage() . "</div>";
                     header('location:'.SITEURL.'admin/manage-user.php');
                 }
-                else
-                {
-                    //FAiled to Insert Data
-                    $_SESSION['add'] = "<div class='error'>Failed to Add user.</div>";
-                    header('location:'.SITEURL.'admin/manage-user.php');
-                }
-
-                
             }
 
         ?>

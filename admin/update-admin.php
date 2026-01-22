@@ -7,37 +7,30 @@
         <br><br>
 
         <?php 
-            //1. Get the ID of Selected Admin
-            $id=$_GET['id'];
+            try {
+                //1. Get the ID of Selected Admin
+                $id = $_GET['id'];
 
-            //2. Create SQL Query to Get the Details
-            $sql="SELECT * FROM tbl_admin WHERE adminID=$id";
+                //2. Get admin details from MongoDB
+                $collection = $conn->selectCollection('admins');
+                $admin = $collection->findOne(['_id' => stringToMongoId($id)]);
 
-            //Execute the Query
-            $res=mysqli_query($conn, $sql);
-
-            //Check whether the query is executed or not
-            if($res==true)
-            {
-                // Check whether the data is available or not
-                $count = mysqli_num_rows($res);
-                //Check whether we have admin data or not
-                if($count==1)
+                //Check whether the admin is available or not
+                if($admin)
                 {
                     // Get the Details
-                    //echo "Admin Available";
-                    $row=mysqli_fetch_assoc($res);
-
-                    $full_name = $row['full_name'];
-                    $username = $row['username'];
-                    $email = $row['email'];
-                    $address = $row['address'];
+                    $username = $admin['username'];
                 }
                 else
                 {
-                    //Redirect to Manage Admin PAge
+                    //Redirect to Manage Admin Page
                     header('location:'.SITEURL.'admin/manage-admin.php');
+                    exit();
                 }
+            } catch (Exception $e) {
+                $_SESSION['update'] = "<div class='error'>Error: " . $e->getMessage() . "</div>";
+                header('location:'.SITEURL.'admin/manage-admin.php');
+                exit();
             }
         
         ?>
@@ -47,30 +40,9 @@
 
             <table class="tbl-30">
                 <tr>
-                    <td>Full Name: </td>
-                    <td>
-                        <input type="text" name="full_name" value="<?php echo $full_name; ?>">
-                    </td>
-                </tr>
-
-                <tr>
                     <td>Username: </td>
                     <td>
-                        <input type="text" name="username" value="<?php echo $username; ?>">
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>email: </td>
-                    <td>
-                        <input type="email" name="email" value="<?php echo $email; ?>">
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>address: </td>
-                    <td>
-                        <input type="text" name="address" value="<?php echo $address; ?>">
+                        <input type="text" name="username" value="<?php echo $username; ?>" required>
                     </td>
                 </tr>
 
@@ -92,39 +64,37 @@
     //Check whether the Submit Button is Clicked or not
     if(isset($_POST['submit']))
     {
-        //echo "Button CLicked";
-        //Get all the values from form to update
-        $id = $_POST['id'];
-        $full_name = $_POST['full_name'];
-        $username = $_POST['username'];
-        $email = $_POST['email'];
-        $address = $_POST['address'];
+        try {
+            //Get all the values from form to update
+            $id = $_POST['id'];
+            $username = trim($_POST['username']);
 
-        //Create a SQL Query to Update Admin
-        $sql = "UPDATE tbl_admin SET
-        full_name = '$full_name',
-        username = '$username',
-        email = '$email',
-        address = '$address' 
-        WHERE adminID='$id'
-        ";
+            //Update Admin in MongoDB
+            $collection = $conn->selectCollection('admins');
+            $result = $collection->updateOne(
+                ['_id' => stringToMongoId($id)],
+                ['$set' => [
+                    'username' => $username
+                ]]
+            );
 
-        //Execute the Query
-        $res = mysqli_query($conn, $sql);
-
-        //Check whether the query executed successfully or not
-        if($res==true)
-        {
-            //Query Executed and Admin Updated
-            $_SESSION['update'] = "<div class='success'>Admin Updated Successfully.</div>";
-            //Redirect to Manage Admin Page
-            header('location:'.SITEURL.'admin/manage-admin.php');
-        }
-        else
-        {
-            //Failed to Update Admin
-            $_SESSION['update'] = "<div class='error'>Failed to Delete Admin.</div>";
-            //Redirect to Manage Admin Page
+            //Check whether the query executed successfully or not
+            if($result->getModifiedCount() > 0 || $result->getMatchedCount() > 0)
+            {
+                //Query Executed and Admin Updated
+                $_SESSION['update'] = "<div class='success'>Admin Updated Successfully.</div>";
+                //Redirect to Manage Admin Page
+                header('location:'.SITEURL.'admin/manage-admin.php');
+            }
+            else
+            {
+                //No changes made
+                $_SESSION['update'] = "<div class='error'>No changes made to Admin.</div>";
+                //Redirect to Manage Admin Page
+                header('location:'.SITEURL.'admin/manage-admin.php');
+            }
+        } catch (Exception $e) {
+            $_SESSION['update'] = "<div class='error'>Error: " . $e->getMessage() . "</div>";
             header('location:'.SITEURL.'admin/manage-admin.php');
         }
     }

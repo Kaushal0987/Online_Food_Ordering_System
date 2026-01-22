@@ -11,38 +11,40 @@
             //CHeck whether id is set or not
             if(isset($_GET['id']))
             {
-                //GEt the Order Details
-                $id=$_GET['id'];
+                try {
+                    //Get the Order Details
+                    $id = $_GET['id'];
 
-                //Get all other details based on this id
-                //SQL Query to get the order details
-                $sql = "SELECT * FROM tbl_order WHERE orderID=$id";
-                //Execute Query
-                $res = mysqli_query($conn, $sql);
-                //Count Rows
-                $count = mysqli_num_rows($res);
+                    //Get all other details based on this id from MongoDB
+                    $collection = $conn->selectCollection('orders');
+                    $order = $collection->findOne(['_id' => stringToMongoId($id)]);
 
-                if($count==1)
-                {
-                    //Detail Availble
-                    $row=mysqli_fetch_assoc($res);
-
-                    $foodID = $row['foodID'];
-                    $qty = $row['quantity'];
-                    $status = $row['status'];
-                    $userID = $row['uID'];
-                }
-                else
-                {
-                    //DEtail not Available/
-                    //Redirect to Manage Order
+                    if($order)
+                    {
+                        //Detail Available
+                        $foodID = $order['foodID'];
+                        $qty = $order['quantity'];
+                        $status = $order['status'];
+                        $userID = $order['uID'];
+                    }
+                    else
+                    {
+                        //Detail not Available
+                        //Redirect to Manage Order
+                        header('location:'.SITEURL.'admin/manage-order.php');
+                        exit();
+                    }
+                } catch (Exception $e) {
+                    $_SESSION['update'] = "<div class='error'>Error: " . $e->getMessage() . "</div>";
                     header('location:'.SITEURL.'admin/manage-order.php');
+                    exit();
                 }
             }
             else
             {
-                //REdirect to Manage ORder PAge
+                //Redirect to Manage Order Page
                 header('location:'.SITEURL.'admin/manage-order.php');
+                exit();
             }
         
         ?>
@@ -53,7 +55,7 @@
                 <tr>
                     <td>Food ID</td>
                     <td>
-                        <input type="number" name="foodID" value="<?php echo $foodID; ?>">
+                        <input type="text" name="foodID" value="<?php echo $foodID; ?>" readonly>
                     </td>
                 </tr>
 
@@ -99,42 +101,42 @@
             //CHeck whether Update Button is Clicked or Not
             if(isset($_POST['submit']))
             {
-                //echo "Clicked";
-                //Get All the Values from Form
-                $id = $_POST['id'];
-                
-                $foodID = $_POST['foodID'];
-                
-                $qty = $_POST['qty'];
+                try {
+                    //Get All the Values from Form
+                    $id = $_POST['id'];
+                    $foodID = $_POST['foodID'];
+                    $qty = (int)$_POST['qty'];
+                    $status = $_POST['status'];
+                    $userID = $_POST['userID'];
 
-                $status = $_POST['status'];
+                    //Update the Values in MongoDB
+                    $collection = $conn->selectCollection('orders');
+                    $result = $collection->updateOne(
+                        ['_id' => stringToMongoId($id)],
+                        ['$set' => [
+                            'foodID' => $foodID,
+                            'quantity' => $qty,
+                            'status' => $status,
+                            'uID' => $userID
+                        ]]
+                    );
 
-                $userID = $_POST['userID'];
-
-                //Update the Values
-                $sql2 = "UPDATE tbl_order SET 
-                    foodID = $foodID,
-                    quantity = $qty,
-                    status = '$status',
-                    uID = '$userID'
-                    WHERE orderID=$id
-                ";
-
-                //Execute the Query
-                $res2 = mysqli_query($conn, $sql2);
-
-                //CHeck whether update or not
-                //And REdirect to Manage Order with Message
-                if($res2==true)
-                {
-                    //Updated
-                    $_SESSION['update'] = "<div class='success'>Order Updated Successfully.</div>";
-                    header('location:'.SITEURL.'admin/manage-order.php');
-                }
-                else
-                {
-                    //Failed to Update
-                    $_SESSION['update'] = "<div class='error'>Failed to Update Order.</div>";
+                    //Check whether update or not
+                    //And Redirect to Manage Order with Message
+                    if($result->getModifiedCount() > 0 || $result->getMatchedCount() > 0)
+                    {
+                        //Updated
+                        $_SESSION['update'] = "<div class='success'>Order Updated Successfully.</div>";
+                        header('location:'.SITEURL.'admin/manage-order.php');
+                    }
+                    else
+                    {
+                        //No changes or Failed to Update
+                        $_SESSION['update'] = "<div class='error'>No changes made to Order.</div>";
+                        header('location:'.SITEURL.'admin/manage-order.php');
+                    }
+                } catch (Exception $e) {
+                    $_SESSION['update'] = "<div class='error'>Error: " . $e->getMessage() . "</div>";
                     header('location:'.SITEURL.'admin/manage-order.php');
                 }
             }

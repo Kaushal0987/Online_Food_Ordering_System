@@ -28,75 +28,85 @@
                     </tr>
 
                     <?php 
-                        //Get all the orders from database
-                        $sql = "SELECT * FROM tbl_order ORDER BY orderID DESC"; // DIsplay the Latest Order at First
-                        //Execute Query
-                        $res = mysqli_query($conn, $sql);
-                        //Count the Rows
-                        $count = mysqli_num_rows($res);
+                        try {
+                            //Get all the orders from MongoDB
+                            $collection = $conn->selectCollection('orders');
+                            
+                            //Find all orders sorted by newest first
+                            $cursor = $collection->find(
+                                [],
+                                ['sort' => ['order_date' => -1]]
+                            );
+                            
+                            //Get orders as array
+                            $orders = iterator_to_array($cursor);
+                            $count = count($orders);
 
-                        $sn = 1; //Create a Serial Number and set its initail value as 1
+                            $sn = 1; //Create a Serial Number and set its initial value as 1
 
-                        if($count>0)
-                        {
-                            //Order Available
-                            while($row=mysqli_fetch_assoc($res))
+                            if($count > 0)
                             {
-                                //Get all the order details
-                                $id = $row['orderID'];
-                                $foodID = $row['foodID'];
-                                $qty = $row['quantity'];
-                                $total = $row['total'];
-                                $order_date = $row['order_date'];
-                                $status = $row['status'];
-                                $userID = $row['uID'];
-                                
-                                ?>
+                                //Order Available
+                                foreach($orders as $order)
+                                {
+                                    //Get all the order details
+                                    $id = mongoIdToString($order['_id']);
+                                    $foodID = $order['foodID'];
+                                    $qty = $order['quantity'];
+                                    $total = $order['total'];
+                                    $order_date = $order['order_date'];
+                                    $status = $order['status'];
+                                    $userID = $order['uID'];
+                                    
+                                    ?>
 
-                                    <tr>
-                                        <td><?php echo $sn++; ?>. </td>
-                                        <td><?php echo $foodID; ?></td>
-                                        <td><?php echo $qty; ?></td>
-                                        <td><?php echo $total; ?></td>
-                                        <td><?php echo $order_date; ?></td>
+                                        <tr>
+                                            <td><?php echo $sn++; ?>. </td>
+                                            <td><?php echo $foodID; ?></td>
+                                            <td><?php echo $qty; ?></td>
+                                            <td><?php echo $total; ?></td>
+                                            <td><?php echo $order_date; ?></td>
 
-                                        <td>
-                                            <?php 
-                                                // Ordered, On Delivery, Delivered, Cancelled
+                                            <td>
+                                                <?php 
+                                                    // Ordered, On Delivery, Delivered, Cancelled
 
-                                                if($status=="Ordered")
-                                                {
-                                                    echo "<label>$status</label>";
-                                                }
-                                                elseif($status=="On Delivery")
-                                                {
-                                                    echo "<label style='color: orange;'>$status</label>";
-                                                }
-                                                elseif($status=="Delivered")
-                                                {
-                                                    echo "<label style='color: green;'>$status</label>";
-                                                }
-                                                elseif($status=="Cancelled")
-                                                {
-                                                    echo "<label style='color: red;'>$status</label>";
-                                                }
-                                            ?>
-                                        </td>
+                                                    if($status=="Ordered")
+                                                    {
+                                                        echo "<label>$status</label>";
+                                                    }
+                                                    elseif($status=="On Delivery")
+                                                    {
+                                                        echo "<label style='color: orange;'>$status</label>";
+                                                    }
+                                                    elseif($status=="Delivered")
+                                                    {
+                                                        echo "<label style='color: green;'>$status</label>";
+                                                    }
+                                                    elseif($status=="Cancelled")
+                                                    {
+                                                        echo "<label style='color: red;'>$status</label>";
+                                                    }
+                                                ?>
+                                            </td>
 
-                                        <td><?php echo $userID; ?></td>
-                                        <td>
-                                            <a href="<?php echo SITEURL; ?>admin/update-order.php?id=<?php echo $id; ?>" class="btn-secondary">Update Order</a>
-                                        </td>
-                                    </tr>
+                                            <td><?php echo $userID; ?></td>
+                                            <td>
+                                                <a href="<?php echo SITEURL; ?>admin/update-order.php?id=<?php echo $id; ?>" class="btn-secondary">Update Order</a>
+                                            </td>
+                                        </tr>
 
-                                <?php
+                                    <?php
 
+                                }
                             }
-                        }
-                        else
-                        {
-                            //Order not Available
-                            echo "<tr><td colspan='12' class='error'>Orders not Available</td></tr>";
+                            else
+                            {
+                                //Order not Available
+                                echo "<tr><td colspan='8' class='error'>Orders not Available</td></tr>";
+                            }
+                        } catch (Exception $e) {
+                            echo "<tr><td colspan='8' class='error'>Error: " . $e->getMessage() . "</td></tr>";
                         }
                     ?>
 

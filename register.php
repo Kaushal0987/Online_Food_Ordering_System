@@ -2,31 +2,44 @@
   include('config/constants.php');
 
   if(isset($_POST['signUp'])){
-      $userName=$_POST['username'];
-      $email=$_POST['email'];
-      $address=$_POST['address'];
-      $password=$_POST['password'];
-      $password=md5($password);
+      $userName = trim($_POST['username']);
+      $email = trim($_POST['email']);
+      $address = trim($_POST['address']);
+      $password = md5($_POST['password']);
 
-      $checkEmail="SELECT * From tbl_users where email='$email'";
-      $result=$conn->query($checkEmail);
-      if($result->num_rows>0){
-          $_SESSION['signup-error'] = "Error Signning Up";
-          echo "Email Address Already Exists !";
-      }
-      else{
-          $insertQuery="INSERT INTO tbl_users(username,email, address, password)
-                        VALUES ('$userName','$email', '$address', '$password')";
-              if($conn->query($insertQuery)==TRUE){
+      try {
+          // Get users collection
+          $collection = $conn->selectCollection('users');
+          
+          // Check if email already exists
+          $existingUser = $collection->findOne(['email' => $email]);
+          
+          if($existingUser){
+              $_SESSION['signup-error'] = "Error Signing Up";
+              echo "Email Address Already Exists !";
+          }
+          else{
+              // Insert new user into MongoDB
+              $result = $collection->insertOne([
+                  'username' => $userName,
+                  'email' => $email,
+                  'address' => $address,
+                  'password' => $password
+              ]);
+              
+              if($result->getInsertedCount() > 0){
                   header("location: login.php");
               }
               else{
-                  $_SESSION['signup-error'] = "Error Signning Up";
+                  $_SESSION['signup-error'] = "Error Signing Up";
                   header("location: signup.php");
-                  echo "Error:".$conn->error;
+                  echo "Error: Failed to create user";
               }
+          }
+      } catch (Exception $e) {
+          $_SESSION['signup-error'] = "Error Signing Up";
+          echo "Error: " . $e->getMessage();
       }
-    
 
   }
 ?>

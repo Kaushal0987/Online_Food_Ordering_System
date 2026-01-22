@@ -18,37 +18,16 @@
 
             <table class="tbl-30">
                 <tr>
-                    <td>Full Name: </td>
-                    <td>
-                        <input type="text" name="full_name" placeholder="Enter Your Name">
-                    </td>
-                </tr>
-
-                <tr>
                     <td>Username: </td>
                     <td>
-                        <input type="text" name="username" placeholder="Your Username">
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>email: </td>
-                    <td>
-                        <input type="email" name="email" placeholder="Your email">
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>address: </td>
-                    <td>
-                        <input type="text" name="address" placeholder="Your address">
+                        <input type="text" name="username" placeholder="Your Username" required>
                     </td>
                 </tr>
 
                 <tr>
                     <td>Password: </td>
                     <td>
-                        <input type="password" name="password" placeholder="Your Password">
+                        <input type="password" name="password" placeholder="Your Password" required>
                     </td>
                 </tr>
 
@@ -74,49 +53,50 @@
 
     if(isset($_POST['submit']))
     {
-        // Button Clicked
-        //echo "Button Clicked";
+        try {
+            // Button Clicked
 
-        //1. Get the Data from form
-        $full_name = $_POST['full_name'];
-        $username = $_POST['username'];
-        $email = $_POST['email'];
-        $address = $_POST['address'];
-        $password = md5($_POST['password']); //Password Encryption with MD5
+            //1. Get the Data from form
+            $username = trim($_POST['username']);
+            $password = md5($_POST['password']); //Password Encryption with MD5
 
-        //2. SQL Query to Save the data into database
-        $sql = "INSERT INTO tbl_admin SET 
-            full_name='$full_name',
-            username='$username',
-            email='$email',
-            address='$address',
-            password='$password',
-            status='1'
-        ";
- 
-        //3. Executing Query and Saving Data into Datbase
-        $res = mysqli_query($conn, $sql) or die(mysqli_error());
+            //2. Check if username already exists
+            $collection = $conn->selectCollection('admins');
+            $existingAdmin = $collection->findOne(['username' => $username]);
+            
+            if($existingAdmin) {
+                $_SESSION['add'] = "<div class='error'>Username already exists.</div>";
+                header("location:".SITEURL.'admin/add-admin.php');
+                exit();
+            }
 
-        //4. Check whether the (Query is Executed) data is inserted or not and display appropriate message
-        if($res==TRUE)
-        {
-            //Data Inserted
-            //echo "Data Inserted";
-            //Create a Session Variable to Display Message
-            $_SESSION['add'] = "<div class='success'>Admin Added Successfully.</div>";
-            //Redirect Page to Manage Admin
-            header("location:".SITEURL.'admin/manage-admin.php');
-        }
-        else
-        {
-            //FAiled to Insert DAta
-            //echo "Faile to Insert Data";
-            //Create a Session Variable to Display Message
-            $_SESSION['add'] = "<div class='error'>Failed to Add Admin.</div>";
-            //Redirect Page to Add Admin
+            //3. Insert Into MongoDB Database
+            $result = $collection->insertOne([
+                'username' => $username,
+                'password' => $password
+            ]);
+
+            //4. Check whether the data is inserted or not and display appropriate message
+            if($result->getInsertedCount() > 0)
+            {
+                //Data Inserted
+                //Create a Session Variable to Display Message
+                $_SESSION['add'] = "<div class='success'>Admin Added Successfully.</div>";
+                //Redirect Page to Manage Admin
+                header("location:".SITEURL.'admin/manage-admin.php');
+            }
+            else
+            {
+                //Failed to Insert Data
+                //Create a Session Variable to Display Message
+                $_SESSION['add'] = "<div class='error'>Failed to Add Admin.</div>";
+                //Redirect Page to Add Admin
+                header("location:".SITEURL.'admin/add-admin.php');
+            }
+        } catch (Exception $e) {
+            $_SESSION['add'] = "<div class='error'>Error: " . $e->getMessage() . "</div>";
             header("location:".SITEURL.'admin/add-admin.php');
         }
-
     }
     
 ?>

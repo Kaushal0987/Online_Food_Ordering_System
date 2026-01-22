@@ -4,29 +4,37 @@
     //CHeck whether id is set or not 
     if(isset($_GET['id']))
     {
-        //Get all the details
-        $id = $_GET['id'];
+        try {
+            //Get all the details
+            $id = $_GET['id'];
 
-        //SQL Query to Get the Selected Food
-        $sql2 = "SELECT * FROM tbl_food WHERE foodID=$id";
-        //execute the Query
-        $res2 = mysqli_query($conn, $sql2);
+            //Get the Selected Food from MongoDB
+            $collection = $conn->selectCollection('foods');
+            $food = $collection->findOne(['_id' => stringToMongoId($id)]);
 
-        //Get the value based on query executed
-        $row2 = mysqli_fetch_assoc($res2);
-
-        //Get the Individual Values of Selected Food
-        $title = $row2['title'];
-        $description = $row2['description'];
-        $price = $row2['price'];
-        $current_image = $row2['image_name'];
-        $active = $row2['active'];
-
+            if($food) {
+                //Get the Individual Values of Selected Food
+                $title = $food['title'];
+                $description = $food['description'];
+                $price = $food['price'];
+                $current_image = $food['image_name'];
+                $active = $food['active'];
+            } else {
+                //Food not found
+                header('location:'.SITEURL.'admin/manage-food.php');
+                exit();
+            }
+        } catch (Exception $e) {
+            $_SESSION['update'] = "<div class='error'>Error: " . $e->getMessage() . "</div>";
+            header('location:'.SITEURL.'admin/manage-food.php');
+            exit();
+        }
     }
     else
     {
         //Redirect to Manage Food
         header('location:'.SITEURL.'admin/manage-food.php');
+        exit();
     }
 ?>
 
@@ -113,114 +121,114 @@
         
             if(isset($_POST['submit']))
             {
-                //echo "Button Clicked";
+                try {
+                    //1. Get all the details from the form
+                    $id = $_POST['id'];
+                    $title = trim($_POST['title']);
+                    $description = trim($_POST['description']);
+                    $price = (float)$_POST['price'];
+                    $current_image = $_POST['current_image'];
+                    $active = $_POST['active'];
 
-                //1. Get all the details from the form
-                $id = $_POST['id'];
-                $title = $_POST['title'];
-                $description = $_POST['description'];
-                $price = $_POST['price'];
-                $current_image = $_POST['current_image'];
-                $active = $_POST['active'];
-
-                //2. Upload the image if selected
-
-                //CHeck whether upload button is clicked or not
-                if(isset($_FILES['image']['name']))
-                {
-                    //Upload BUtton Clicked
-                    $image_name = $_FILES['image']['name']; //New Image NAme
-
-                    //CHeck whether th file is available or not
-                    if($image_name!="")
+                    //2. Upload the image if selected
+                    //Check whether upload button is clicked or not
+                    if(isset($_FILES['image']['name']))
                     {
-                        //IMage is Available
-                        //A. Uploading New Image
+                        //Upload Button Clicked
+                        $image_name = $_FILES['image']['name']; //New Image Name
 
-                        //REname the Image
-                        $ext = end(explode('.', $image_name)); //Gets the extension of the image
-
-                        $image_name = "Food-Name-".rand(0000, 9999).'.'.$ext; //THis will be renamed image
-
-                        //Get the Source Path and DEstination PAth
-                        $src_path = $_FILES['image']['tmp_name']; //Source Path
-                        $dest_path = "../images/food/".$image_name; //DEstination Path
-
-                        //Upload the image
-                        $upload = move_uploaded_file($src_path, $dest_path);
-
-                        /// CHeck whether the image is uploaded or not
-                        if($upload==false)
+                        //Check whether the file is available or not
+                        if($image_name!="")
                         {
-                            //FAiled to Upload
-                            $_SESSION['upload'] = "<div class='error'>Failed to Upload new Image.</div>";
-                            //REdirect to Manage Food 
-                            header('location:'.SITEURL.'admin/manage-food.php');
-                            //Stop the Process
-                            die();
-                        }
-                        //3. Remove the image if new image is uploaded and current image exists
-                        //B. Remove current Image if Available
-                        if($current_image!="")
-                        {
-                            //Current Image is Available
-                            //REmove the image
-                            $remove_path = "../images/food/".$current_image;
+                            //Image is Available
+                            //A. Uploading New Image
 
-                            $remove = unlink($remove_path);
+                            //Rename the Image
+                            $ext = end(explode('.', $image_name)); //Gets the extension of the image
 
-                            //Check whether the image is removed or not
-                            if($remove==false)
+                            $image_name = "Food-Name-".rand(0000, 9999).'.'.$ext; //This will be renamed image
+
+                            //Get the Source Path and Destination Path
+                            $src_path = $_FILES['image']['tmp_name']; //Source Path
+                            $dest_path = "../images/food/".$image_name; //Destination Path
+
+                            //Upload the image
+                            $upload = move_uploaded_file($src_path, $dest_path);
+
+                            //Check whether the image is uploaded or not
+                            if($upload==false)
                             {
-                                //failed to remove current image
-                                $_SESSION['remove-failed'] = "<div class='error'>Faile to remove current image.</div>";
-                                //redirect to manage food
+                                //Failed to Upload
+                                $_SESSION['upload'] = "<div class='error'>Failed to Upload new Image.</div>";
+                                //Redirect to Manage Food 
                                 header('location:'.SITEURL.'admin/manage-food.php');
-                                //stop the process
+                                //Stop the Process
                                 die();
                             }
+                            //3. Remove the image if new image is uploaded and current image exists
+                            //B. Remove current Image if Available
+                            if($current_image!="")
+                            {
+                                //Current Image is Available
+                                //Remove the image
+                                $remove_path = "../images/food/".$current_image;
+
+                                if(file_exists($remove_path)) {
+                                    $remove = unlink($remove_path);
+
+                                    //Check whether the image is removed or not
+                                    if($remove==false)
+                                    {
+                                        //failed to remove current image
+                                        $_SESSION['remove-failed'] = "<div class='error'>Failed to remove current image.</div>";
+                                        //redirect to manage food
+                                        header('location:'.SITEURL.'admin/manage-food.php');
+                                        //stop the process
+                                        die();
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            $image_name = $current_image; //Default Image when Image is Not Selected
                         }
                     }
                     else
                     {
-                        $image_name = $current_image; //Default Image when Image is Not Selected
+                        $image_name = $current_image; //Default Image when Button is not Clicked
                     }
-                }
-                else
-                {
-                    $image_name = $current_image; //Default Image when Button is not Clicked
-                }
 
-                
+                    //4. Update the Food in MongoDB Database
+                    $collection = $conn->selectCollection('foods');
+                    $result = $collection->updateOne(
+                        ['_id' => stringToMongoId($id)],
+                        ['$set' => [
+                            'title' => $title,
+                            'description' => $description,
+                            'price' => $price,
+                            'image_name' => $image_name,
+                            'active' => $active
+                        ]]
+                    );
 
-                //4. Update the Food in Database
-                $sql3 = "UPDATE tbl_food SET 
-                    title = '$title',
-                    description = '$description',
-                    price = $price,
-                    image_name = '$image_name',
-                    active = '$active'
-                    WHERE foodID=$id
-                ";
-
-                //Execute the SQL Query
-                $res3 = mysqli_query($conn, $sql3);
-
-                //CHeck whether the query is executed or not 
-                if($res3==true)
-                {
-                    //Query Exectued and Food Updated
-                    $_SESSION['update'] = "<div class='success'>Food Updated Successfully.</div>";
+                    //Check whether the query is executed or not 
+                    if($result->getModifiedCount() > 0 || $result->getMatchedCount() > 0)
+                    {
+                        //Query Executed and Food Updated
+                        $_SESSION['update'] = "<div class='success'>Food Updated Successfully.</div>";
+                        header('location:'.SITEURL.'admin/manage-food.php');
+                    }
+                    else
+                    {
+                        //No changes made
+                        $_SESSION['update'] = "<div class='error'>No changes made to Food.</div>";
+                        header('location:'.SITEURL.'admin/manage-food.php');
+                    }
+                } catch (Exception $e) {
+                    $_SESSION['update'] = "<div class='error'>Error: " . $e->getMessage() . "</div>";
                     header('location:'.SITEURL.'admin/manage-food.php');
                 }
-                else
-                {
-                    //Failed to Update Food
-                    $_SESSION['update'] = "<div class='error'>Failed to Update Food.</div>";
-                    header('location:'.SITEURL.'admin/manage-food.php');
-                }
-
-                
             }
         
         ?>

@@ -52,51 +52,41 @@
 
 <?php 
 
-            //CHeck whether the Submit Button is Clicked on Not
+            //CHeck whether the Submit Button is Clicked or Not
             if(isset($_POST['submit']))
             {
-                //echo "CLicked";
+                try {
+                    //1. Get the Data from Form
+                    $id = $_POST['id'];
+                    $current_password = md5($_POST['current_password']);
+                    $new_password = md5($_POST['new_password']);
+                    $confirm_password = md5($_POST['confirm_password']);
 
-                //1. Get the DAta from Form
-                $id=$_POST['id'];
-                $current_password = md5($_POST['current_password']);
-                $new_password = md5($_POST['new_password']);
-                $confirm_password = md5($_POST['confirm_password']);
+                    //2. Check whether the user with current ID and Current Password Exists or Not
+                    $collection = $conn->selectCollection('admins');
+                    $admin = $collection->findOne([
+                        '_id' => stringToMongoId($id),
+                        'password' => $current_password
+                    ]);
 
-
-                //2. Check whether the user with current ID and Current Password Exists or Not
-                $sql = "SELECT * FROM tbl_admin WHERE adminID=$id AND password='$current_password'";
-
-                //Execute the Query
-                $res = mysqli_query($conn, $sql);
-
-                if($res==true)
-                {
-                    //CHeck whether data is available or not
-                    $count=mysqli_num_rows($res);
-
-                    if($count==1)
+                    if($admin)
                     {
-                        //User Exists and Password Can be CHanged
-                        //echo "User FOund";
-
+                        //User Exists and Password Can be Changed
+                        
                         //Check whether the new password and confirm match or not
-                        if($new_password==$confirm_password)
+                        if($new_password == $confirm_password)
                         {
                             //Update the Password
-                            $sql2 = "UPDATE tbl_admin SET 
-                                password='$new_password' 
-                                WHERE adminID=$id
-                            ";
+                            $result = $collection->updateOne(
+                                ['_id' => stringToMongoId($id)],
+                                ['$set' => ['password' => $new_password]]
+                            );
 
-                            //Execute the Query
-                            $res2 = mysqli_query($conn, $sql2);
-
-                            //CHeck whether the query exeuted or not
-                            if($res2==true)
+                            //Check whether the query executed or not
+                            if($result->getModifiedCount() > 0)
                             {
-                                //Display Succes Message
-                                //REdirect to Manage Admin Page with Success Message
+                                //Display Success Message
+                                //Redirect to Manage Admin Page with Success Message
                                 $_SESSION['change-pwd'] = "<div class='success'>Password Changed Successfully. </div>";
                                 //Redirect the User
                                 header('location:'.SITEURL.'admin/manage-admin.php');
@@ -104,7 +94,7 @@
                             else
                             {
                                 //Display Error Message
-                                //REdirect to Manage Admin Page with Error Message
+                                //Redirect to Manage Admin Page with Error Message
                                 $_SESSION['change-pwd'] = "<div class='error'>Failed to Change Password. </div>";
                                 //Redirect the User
                                 header('location:'.SITEURL.'admin/manage-admin.php');
@@ -112,25 +102,23 @@
                         }
                         else
                         {
-                            //REdirect to Manage Admin Page with Error Message
-                            $_SESSION['pwd-not-match'] = "<div class='error'>Password Did not Patch. </div>";
+                            //Redirect to Manage Admin Page with Error Message
+                            $_SESSION['pwd-not-match'] = "<div class='error'>Password Did not Match. </div>";
                             //Redirect the User
                             header('location:'.SITEURL.'admin/manage-admin.php');
-
                         }
                     }
                     else
                     {
-                        //User Does not Exist Set Message and REdirect
-                        $_SESSION['user-not-found'] = "<div class='error'>User Not Found. </div>";
+                        //User Does not Exist Set Message and Redirect
+                        $_SESSION['user-not-found'] = "<div class='error'>User Not Found or Current Password Incorrect. </div>";
                         //Redirect the User
                         header('location:'.SITEURL.'admin/manage-admin.php');
                     }
+                } catch (Exception $e) {
+                    $_SESSION['change-pwd'] = "<div class='error'>Error: " . $e->getMessage() . "</div>";
+                    header('location:'.SITEURL.'admin/manage-admin.php');
                 }
-
-                //3. CHeck Whether the New Password and Confirm Password Match or not
-
-                //4. Change PAssword if all above is true
             }
 
 ?>

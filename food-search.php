@@ -7,8 +7,7 @@
         <?php 
 
             //Get the Search Keyword
-            // $search = $_POST['search'];
-            $search = mysqli_real_escape_string($conn, $_POST['search']);
+            $search = trim($_POST['search']);
         
         ?>
 
@@ -28,71 +27,82 @@
 
         <?php 
 
-            //SQL Query to Get foods based on search keyword
-            //$search = burger '; DROP database name;
-            // "SELECT * FROM tbl_food WHERE title LIKE '%burger'%' OR description LIKE '%burger%'";
-            $sql = "SELECT * FROM tbl_food WHERE title LIKE '%$search%' OR description LIKE '%$search%'";
+            try {
+                //MongoDB Query to Get foods based on search keyword using regex
+                $foodCollection = $conn->selectCollection('foods');
+                
+                // Create regex pattern for search
+                $regex = new MongoDB\BSON\Regex($search, 'i'); // 'i' for case-insensitive
+                
+                // Find foods where title or description matches search keyword
+                $cursor = $foodCollection->find([
+                    '$or' => [
+                        ['title' => $regex],
+                        ['description' => $regex]
+                    ]
+                ]);
 
-            //Execute the Query
-            $res = mysqli_query($conn, $sql);
+                //Count results
+                $foods = iterator_to_array($cursor);
+                $count = count($foods);
 
-            //Count Rows
-            $count = mysqli_num_rows($res);
-
-            //Check whether food available of not
-            if($count>0)
-            {
-                //Food Available
-                while($row=mysqli_fetch_assoc($res))
+                //Check whether food available or not
+                if($count > 0)
                 {
-                    //Get the details
-                    $id = $row['foodID'];
-                    $title = $row['title'];
-                    $price = $row['price'];
-                    $description = $row['description'];
-                    $image_name = $row['image_name'];
-                    ?>
+                    //Food Available
+                    foreach($foods as $food)
+                    {
+                        //Get the details
+                        $id = mongoIdToString($food['_id']);
+                        $title = $food['title'];
+                        $price = $food['price'];
+                        $description = $food['description'];
+                        $image_name = $food['image_name'];
+                        ?>
 
-                    <div class="food-menu-box">
-                        <div class="food-menu-img">
-                            <?php 
-                                // Check whether image name is available or not
-                                if($image_name=="")
-                                {
-                                    //Image not Available
-                                    echo "<div class='error'>Image not Available.</div>";
-                                }
-                                else
-                                {
-                                    //Image Available
-                                    ?>
-                                    <img src="<?php echo SITEURL; ?>images/food/<?php echo $image_name; ?>" alt="Chicke Hawain Pizza" class="img-responsive img-curve">
-                                    <?php 
+                        <div class="food-menu-box">
+                            <div class="food-menu-img">
+                                <?php 
+                                    // Check whether image name is available or not
+                                    if($image_name=="")
+                                    {
+                                        //Image not Available
+                                        echo "<div class='error'>Image not Available.</div>";
+                                    }
+                                    else
+                                    {
+                                        //Image Available
+                                        ?>
+                                        <img src="<?php echo SITEURL; ?>images/food/<?php echo $image_name; ?>" alt="Chicke Hawain Pizza" class="img-responsive img-curve">
+                                        <?php 
 
-                                }
-                            ?>
-                            
+                                    }
+                                ?>
+                                
+                            </div>
+
+                            <div class="food-menu-desc">
+                                <h4><?php echo $title; ?></h4>
+                                <p class="food-price">$<?php echo $price; ?></p>
+                                <p class="food-detail">
+                                    <?php echo $description; ?>
+                                </p>
+                                <br>
+
+                                <a href="#" class="btn btn-primary">Order Now</a>
+                            </div>
                         </div>
 
-                        <div class="food-menu-desc">
-                            <h4><?php echo $title; ?></h4>
-                            <p class="food-price">$<?php echo $price; ?></p>
-                            <p class="food-detail">
-                                <?php echo $description; ?>
-                            </p>
-                            <br>
-
-                            <a href="#" class="btn btn-primary">Order Now</a>
-                        </div>
-                    </div>
-
-                    <?php
+                        <?php
+                    }
                 }
-            }
-            else
-            {
-                //Food Not Available
-                echo "<div class='error'>Food not found.</div>";
+                else
+                {
+                    //Food Not Available
+                    echo "<div class='error'>Food not found.</div>";
+                }
+            } catch (Exception $e) {
+                echo "<div class='error'>Search Error: " . $e->getMessage() . "</div>";
             }
         
         ?>

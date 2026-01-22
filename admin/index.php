@@ -17,12 +17,13 @@
                 <div class="col-4 text-center">
 
                     <?php 
-                        //Sql Query 
-                        $sql1 = "SELECT * FROM tbl_users";
-                        //Execute Query
-                        $res1 = mysqli_query($conn, $sql1);
-                        //Count Rows
-                        $count1 = mysqli_num_rows($res1);
+                        try {
+                            //Get users collection count
+                            $collection = $conn->selectCollection('users');
+                            $count1 = $collection->countDocuments();
+                        } catch (Exception $e) {
+                            $count1 = 0;
+                        }
                     ?>
 
                     <h1><?php echo $count1; ?></h1>
@@ -33,12 +34,13 @@
                 <div class="col-4 text-center">
 
                     <?php 
-                        //Sql Query 
-                        $sql2 = "SELECT * FROM tbl_food";
-                        //Execute Query
-                        $res2 = mysqli_query($conn, $sql2);
-                        //Count Rows
-                        $count2 = mysqli_num_rows($res2);
+                        try {
+                            //Get foods collection count
+                            $collection = $conn->selectCollection('foods');
+                            $count2 = $collection->countDocuments();
+                        } catch (Exception $e) {
+                            $count2 = 0;
+                        }
                     ?>
 
                     <h1><?php echo $count2; ?></h1>
@@ -49,12 +51,13 @@
                 <div class="col-4 text-center">
                     
                     <?php 
-                        //Sql Query 
-                        $sql3 = "SELECT * FROM tbl_order";
-                        //Execute Query
-                        $res3 = mysqli_query($conn, $sql3);
-                        //Count Rows
-                        $count3 = mysqli_num_rows($res3);
+                        try {
+                            //Get orders collection count
+                            $collection = $conn->selectCollection('orders');
+                            $count3 = $collection->countDocuments();
+                        } catch (Exception $e) {
+                            $count3 = 0;
+                        }
                     ?>
 
                     <h1><?php echo $count3; ?></h1>
@@ -65,19 +68,20 @@
                 <div class="col-4 text-center">
                     
                     <?php 
-                        //Creat SQL Query to Get Total Revenue Generated
-                        //Aggregate Function in SQL
-                        $sql4 = "SELECT SUM(total) AS Total FROM tbl_order WHERE status='Delivered'";
-
-                        //Execute the Query
-                        $res4 = mysqli_query($conn, $sql4);
-
-                        //Get the VAlue
-                        $row4 = mysqli_fetch_assoc($res4);
-                        
-                        //GEt the Total REvenue
-                        $total_revenue = $row4['Total'];
-
+                        try {
+                            //Calculate Total Revenue from Delivered Orders
+                            $collection = $conn->selectCollection('orders');
+                            
+                            $pipeline = [
+                                ['$match' => ['status' => 'Delivered']],
+                                ['$group' => ['_id' => null, 'Total' => ['$sum' => '$total']]]
+                            ];
+                            
+                            $result = $collection->aggregate($pipeline)->toArray();
+                            $total_revenue = isset($result[0]['Total']) ? $result[0]['Total'] : 0;
+                        } catch (Exception $e) {
+                            $total_revenue = 0;
+                        }
                     ?>
 
                     <h1>$<?php echo $total_revenue; ?></h1>

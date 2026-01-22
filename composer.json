@@ -1,0 +1,12 @@
+{
+    "name": "online-food-ordering-system/mongodb",
+    "description": "Online Food Ordering System with MongoDB",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "mongodb/mongodb": "^1.15"
+    },
+    "autoload": {
+        "files": ["config/constants.php"]
+    }
+}

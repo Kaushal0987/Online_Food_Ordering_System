@@ -5,64 +5,64 @@
         //CHeck whether food id is set or not
         if(isset($_GET['foodID']) && isset($_GET['uID']))
         {
-            //Get the Food id and details of the selected food
-            $foodID = $_GET['foodID'];
+            try {
+                //Get the Food id and details of the selected food
+                $foodID = $_GET['foodID'];
+                
+                //Get the Details of the Selected Food from MongoDB
+                $foodCollection = $conn->selectCollection('foods');
+                $food = $foodCollection->findOne(['_id' => stringToMongoId($foodID)]);
+                
+                //Check whether the data is available or not
+                if($food)
+                {
+                    //WE Have Data
+                    $title = $food['title'];
+                    $price = $food['price'];
+                    $image_name = $food['image_name'];
+                }
+                else
+                {
+                    //Food not Available
+                    //Redirect to Home Page
+                    header('location:'.SITEURL);
+                    exit();
+                }
 
-            //Get the DEtails of the SElected Food
-            $sql = "SELECT * FROM tbl_food WHERE foodID=$foodID";
-            //Execute the Query
-            $res = mysqli_query($conn, $sql);
-            //Count the rows
-            $count = mysqli_num_rows($res);
-            //CHeck whether the data is available or not
-            if($count==1)
-            {
-                //WE Have DAta
-                //GEt the Data from Database
-                $row = mysqli_fetch_assoc($res);
-
-                $title = $row['title'];
-                $price = $row['price'];
-                $image_name = $row['image_name'];
-            }
-            else
-            {
-                //Food not Availabe
-                //REdirect to Home Page
+                //Get the User id and details of the selected User
+                $uID = $_GET['uID'];
+                
+                //Get the Details of the Selected User from MongoDB
+                $userCollection = $conn->selectCollection('users');
+                $user = $userCollection->findOne(['_id' => stringToMongoId($uID)]);
+                
+                //Check whether the data is available or not
+                if($user)
+                {
+                    //WE Have Data
+                    $username = $user['username'];
+                    $email = $user['email'];
+                    $address = $user['address'];
+                }
+                else
+                {
+                    //User not Available
+                    //Redirect to Home Page
+                    header('location:'.SITEURL);
+                    exit();
+                }
+            } catch (Exception $e) {
+                //Error occurred
+                $_SESSION['order'] = "<div class='error text-center'>Error: " . $e->getMessage() . "</div>";
                 header('location:'.SITEURL);
-            }
-
-            //Get the User id and details of the selected User
-            $uID = $_GET['uID'];
-
-            //Get the DEtails of the SElected User
-            $sql1 = "SELECT * FROM tbl_users WHERE uID=$uID";
-            //Execute the Query
-            $res1 = mysqli_query($conn, $sql1);
-            //Count the rows
-            $count1 = mysqli_num_rows($res1);
-            //CHeck whether the data is available or not
-            if($count1==1)
-            {
-                //WE Have DAta
-                //GEt the Data from Database
-                $row1 = mysqli_fetch_assoc($res1);
-
-                $username = $row1['username'];
-                $email = $row1['email'];
-                $address = $row1['address'];
-            }
-            else
-            {
-                //User not Availabe
-                //REdirect to Home Page
-                header('location:'.SITEURL);
+                exit();
             }
         }
         else
         {
             //Redirect to homepage
             header('location:'.SITEURL);
+            exit();
         }
     ?>
 
@@ -137,44 +137,44 @@
                         $foodID = $_GET['foodID'];
                         $uID = $_GET['uID'];
 
-                        // Get all the details from the form
-                        $quantity = $_POST['quantity'];
+                        try {
+                            // Get all the details from the form
+                            $quantity = (int)$_POST['quantity'];
+                            $price = (float)$_POST['price'];
+                            $total = $price * $quantity; // total = price x quantity 
 
-                        $price = $_POST['price'];
-                        $total = $price * $quantity; // total = price x quantity 
+                            $order_date = date("Y-m-d h:i:sa"); //Order Date
 
-                        $order_date = date("Y-m-d h:i:sa"); //Order DAte
+                            $status = "Ordered";  // Ordered, On Delivery, Delivered, Cancelled
 
-                        $status = "Ordered";  // Ordered, On Delivery, Delivered, Cancelled
+                            //Save the Order in Database
+                            $orderCollection = $conn->selectCollection('orders');
+                            
+                            $result = $orderCollection->insertOne([
+                                'foodID' => $foodID,
+                                'quantity' => $quantity,
+                                'total' => $total,
+                                'order_date' => $order_date,
+                                'status' => $status,
+                                'uID' => $uID
+                            ]);
 
-
-                        //Save the Order in Databaase
-                        //Create SQL to save the data
-                        $sql2 = "INSERT INTO tbl_order SET 
-                            foodID = '$foodID',
-                            quantity = $quantity,
-                            total = $total,
-                            order_date = '$order_date',
-                            status = '$status',
-                            uID = $uID
-                        ";
-
-                        //echo $sql2; die();
-
-                        //Execute the Query
-                        $res2 = mysqli_query($conn, $sql2);
-
-                        //Check whether query executed successfully or not
-                        if($res2==true)
-                        {
-                            //Query Executed and Order Saved
-                            $_SESSION['order'] = "<div class='success text-center'>Food Ordered Successfully.</div>";
-                            header('location:'.SITEURL);
-                        }
-                        else
-                        {
-                            //Failed to Save Order
-                            $_SESSION['order'] = "<div class='error text-center'>Failed to Order Food.</div>";
+                            //Check whether order was inserted successfully
+                            if($result->getInsertedCount() > 0)
+                            {
+                                //Query Executed and Order Saved
+                                $_SESSION['order'] = "<div class='success text-center'>Food Ordered Successfully.</div>";
+                                header('location:'.SITEURL);
+                            }
+                            else
+                            {
+                                //Failed to Save Order
+                                $_SESSION['order'] = "<div class='error text-center'>Failed to Order Food.</div>";
+                                header('location:'.SITEURL);
+                            }
+                        } catch (Exception $e) {
+                            //Error occurred
+                            $_SESSION['order'] = "<div class='error text-center'>Order Error: " . $e->getMessage() . "</div>";
                             header('location:'.SITEURL);
                         }
                     }

@@ -7,37 +7,33 @@
         <br><br>
 
         <?php 
-            //1. Get the ID of Selected User
-            $id=$_GET['id'];
+            try {
+                //1. Get the ID of Selected User
+                $id = $_GET['id'];
 
-            //2. Create SQL Query to Get the Details
-            $sql="SELECT * FROM tbl_users WHERE uID=$id";
+                //2. Get user details from MongoDB
+                $collection = $conn->selectCollection('users');
+                $user = $collection->findOne(['_id' => stringToMongoId($id)]);
 
-            //Execute the Query
-            $res=mysqli_query($conn, $sql);
-
-            //Check whether the query is executed or not
-            if($res==true)
-            {
-                // Check whether the data is available or not
-                $count = mysqli_num_rows($res);
-                //Check whether we have user data or not
-                if($count==1)
+                //Check whether the user is available or not
+                if($user)
                 {
                     // Get the Details
-                    //echo "user Available";
-                    $row=mysqli_fetch_assoc($res);
-
-                    $username = $row['username'];
-                    $email = $row['email'];
-                    $address = $row['address'];
-                    $password = $row['password'];
+                    $username = $user['username'];
+                    $email = $user['email'];
+                    $address = $user['address'];
+                    $password = $user['password'];
                 }
                 else
                 {
-                    //Redirect to Manage Admin PAge
+                    //Redirect to Manage User Page
                     header('location:'.SITEURL.'admin/manage-user.php');
+                    exit();
                 }
+            } catch (Exception $e) {
+                $_SESSION['update'] = "<div class='error'>Error: " . $e->getMessage() . "</div>";
+                header('location:'.SITEURL.'admin/manage-user.php');
+                exit();
             }
         
         ?>
@@ -91,39 +87,43 @@
     //Check whether the Submit Button is Clicked or not
     if(isset($_POST['submit']))
     {
-        //echo "Button CLicked";
-        //Get all the values from form to update
-        $id = $_POST['id'];
-        $username = $_POST['username'];
-        $email = $_POST['email'];
-        $address = $_POST['address'];
-        $password = md5($_POST['password']);
+        try {
+            //Get all the values from form to update
+            $id = $_POST['id'];
+            $username = trim($_POST['username']);
+            $email = trim($_POST['email']);
+            $address = trim($_POST['address']);
+            $password = md5($_POST['password']);
 
-        //Create a SQL Query to Update user
-        $sql = "UPDATE tbl_users SET
-        username = '$username',
-        email = '$email',
-        address = '$address',
-        password = '$password' 
-        WHERE uID='$id'
-        ";
+            //Update user in MongoDB
+            $collection = $conn->selectCollection('users');
+            $result = $collection->updateOne(
+                ['_id' => stringToMongoId($id)],
+                ['$set' => [
+                    'username' => $username,
+                    'email' => $email,
+                    'address' => $address,
+                    'password' => $password
+                ]]
+            );
 
-        //Execute the Query
-        $res = mysqli_query($conn, $sql);
-
-        //Check whether the query executed successfully or not
-        if($res==true)
-        {
-            //Query Executed and user Updated
-            $_SESSION['update'] = "<div class='success'>User Updated Successfully.</div>";
-            //Redirect to Manage user Page
-            header('location:'.SITEURL.'admin/manage-user.php');
-        }
-        else
-        {
-            //Failed to Update user
-            $_SESSION['update'] = "<div class='error'>Failed to Delete user.</div>";
-            //Redirect to Manage user Page
+            //Check whether the query executed successfully or not
+            if($result->getModifiedCount() > 0 || $result->getMatchedCount() > 0)
+            {
+                //Query Executed and user Updated
+                $_SESSION['update'] = "<div class='success'>User Updated Successfully.</div>";
+                //Redirect to Manage user Page
+                header('location:'.SITEURL.'admin/manage-user.php');
+            }
+            else
+            {
+                //No changes made
+                $_SESSION['update'] = "<div class='error'>No changes made to User.</div>";
+                //Redirect to Manage user Page
+                header('location:'.SITEURL.'admin/manage-user.php');
+            }
+        } catch (Exception $e) {
+            $_SESSION['update'] = "<div class='error'>Error: " . $e->getMessage() . "</div>";
             header('location:'.SITEURL.'admin/manage-user.php');
         }
     }

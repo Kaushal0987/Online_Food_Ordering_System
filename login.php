@@ -3,25 +3,32 @@
 include('config/constants.php');
 
 if(isset($_POST['signIn'])){
-   $email=$_POST['email'];
-   $password=$_POST['password'];
-   $password=md5($password) ;
+   $email = trim($_POST['email']);
+   $password = md5($_POST['password']);
    
-   $sql="SELECT * FROM tbl_users WHERE email='$email' and password='$password'";
+   try {
+       // Get users collection
+       $collection = $conn->selectCollection('users');
+       
+       // Find user with matching email and password
+       $user = $collection->findOne([
+           'email' => $email,
+           'password' => $password
+       ]);
 
-   $result=$conn->query($sql);
-
-   if($result->num_rows>0){
-        session_start();
-        $row=$result->fetch_assoc();
-        $uID = $row['uID'];
-        $_SESSION['uID'] = $uID;
-        $_SESSION['login-status'] = true;
-        header('location:'.SITEURL);
-        exit();
-   }
-   else{
-    echo "Not Found, Incorrect Email or Password";
+       if($user){
+            session_start();
+            $uID = mongoIdToString($user['_id']);
+            $_SESSION['uID'] = $uID;
+            $_SESSION['login-status'] = true;
+            header('location:'.SITEURL);
+            exit();
+       }
+       else{
+        echo "Not Found, Incorrect Email or Password";
+       }
+   } catch (Exception $e) {
+       echo "Login Error: " . $e->getMessage();
    }
 
 }

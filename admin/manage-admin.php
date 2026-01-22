@@ -62,33 +62,28 @@
 
                     
                     <?php 
-                        //Query to Get all Admin
-                        $sql = "SELECT * FROM tbl_admin";
-                        //Execute the Query
-                        $res = mysqli_query($conn, $sql);
+                        try {
+                            //Query to Get all Admins from MongoDB
+                            $collection = $conn->selectCollection('admins');
+                            
+                            //Find all admins
+                            $cursor = $collection->find();
+                            
+                            //Get admins as array
+                            $admins = iterator_to_array($cursor);
+                            $count = count($admins);
 
-                        //CHeck whether the Query is Executed of Not
-                        if($res==TRUE)
-                        {
-                            // Count Rows to CHeck whether we have data in database or not
-                            $count = mysqli_num_rows($res); // Function to get all the rows in database
+                            $sn = 1; //Create a Variable and Assign the value
 
-                            $sn=1; //Create a Variable and Assign the value
-
-                            //CHeck the num of rows
-                            if($count>0)
+                            //Check the num of rows
+                            if($count > 0)
                             {
-                                //WE HAve data in database
-                                while($rows=mysqli_fetch_assoc($res))
+                                //WE HAVE data in database
+                                foreach($admins as $admin)
                                 {
-                                    //Using While loop to get all the data from database.
-                                    //And while loop will run as long as we have data in database
-
-                                    //Get individual DAta
-                                    $id=$rows['adminID'];
-                                    $username=$rows['username'];
-                                    // $email=$rows['email'];
-                                    // $address=$rows['address'];
+                                    //Get individual Data
+                                    $id = mongoIdToString($admin['_id']);
+                                    $username = $admin['username'];
 
                                     //Display the Values in our Table
                                     ?>
@@ -96,8 +91,6 @@
                                     <tr>
                                         <td><?php echo $sn++; ?>. </td>
                                         <td><?php echo $username; ?></td>
-                                        <!-- <td><?php echo $email; ?></td>
-                                        <td><?php echo $address; ?></td> -->
                                         <td>
                                             <a href="<?php echo SITEURL; ?>admin/update-password.php?id=<?php echo $id; ?>" class="btn-primary">Change Password</a>
                                             <a href="<?php echo SITEURL; ?>admin/update-admin.php?id=<?php echo $id; ?>" class="btn-secondary">Update Admin</a>
@@ -106,15 +99,16 @@
                                     </tr>
 
                                     <?php
-
                                 }
                             }
                             else
                             {
                                 //We Do not Have Data in Database
+                                echo "<tr><td colspan='3' class='error'>No Admins Found</td></tr>";
                             }
+                        } catch (Exception $e) {
+                            echo "<tr><td colspan='3' class='error'>Error: " . $e->getMessage() . "</td></tr>";
                         }
-
                     ?>
 
 

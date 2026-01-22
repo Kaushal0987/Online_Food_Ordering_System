@@ -51,40 +51,42 @@
     {
         //Process for Login
         //1. Get the Data from Login form
-        // $username = $_POST['username'];
-        // $password = md5($_POST['password']);
-        $username = mysqli_real_escape_string($conn, $_POST['username']);
-        
-        $raw_password = md5($_POST['password']);
-        $password = mysqli_real_escape_string($conn, $raw_password);
+        $username = trim($_POST['username']);
+        $password = md5($_POST['password']);
 
-        //2. SQL to check whether the user with username and password exists or not
-        $sql = "SELECT * FROM tbl_admin WHERE username='$username' AND password='$password'";
+        //2. Query MongoDB to check whether the user with username and password exists or not
+        try {
+            $collection = $conn->selectCollection('admins');
+            
+            //3. Find admin with matching username and password
+            $admin = $collection->findOne([
+                'username' => $username,
+                'password' => $password
+            ]);
 
-        //3. Execute the Query
-        $res = mysqli_query($conn, $sql);
+            //4. Check whether the admin exists or not
+            if($admin)
+            {
+                //User Available and Login Success
+                $_SESSION['login'] = "<div class='success'>Login Successful.</div>";
+                $_SESSION['user'] = $username; //TO check whether the user is logged in or not and logout will unset it
+                $_SESSION['adminID'] = mongoIdToString($admin['_id']); //Store admin ID for reference
 
-        //4. COunt rows to check whether the user exists or not
-        $count = mysqli_num_rows($res);
-
-        if($count==1)
-        {
-            //User AVailable and Login Success
-            $_SESSION['login'] = "<div class='success'>Login Successful.</div>";
-            $_SESSION['user'] = $username; //TO check whether the user is logged in or not and logout will unset it
-
-            //REdirect to HOme Page/Dashboard
-            header('location:'.SITEURL.'admin/');
-        }
-        else
-        {
-            //User not Available and Login FAil
-            $_SESSION['login'] = "<div class='error text-center'>Username or Password did not match.</div>";
-            //REdirect to login page
+                //REdirect to HOme Page/Dashboard
+                header('location:'.SITEURL.'admin/');
+            }
+            else
+            {
+                //User not Available and Login Fail
+                $_SESSION['login'] = "<div class='error text-center'>Username or Password did not match.</div>";
+                //REdirect to login page
+                header('location:'.SITEURL.'admin/login.php');
+            }
+        } catch (Exception $e) {
+            //Error during login
+            $_SESSION['login'] = "<div class='error text-center'>Login Error: " . $e->getMessage() . "</div>";
             header('location:'.SITEURL.'admin/login.php');
         }
-
-
     }
 
 ?>

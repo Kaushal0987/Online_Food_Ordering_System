@@ -1,0 +1,186 @@
+===========================================
+MONGODB SETUP GUIDE
+Online Food Ordering System
+===========================================
+
+STEP 1: Install MongoDB PHP Driver
+-----------------------------------
+1. Open your terminal/command prompt in the project root directory
+2. Run: composer install
+   (This installs the MongoDB PHP library)
+
+Alternative if Composer is not available:
+1. Install Composer first from: https://getcomposer.org/
+2. Or manually download MongoDB PHP extension from: https://pecl.php.net/package/mongodb
+3. Add extension=mongodb (it will auto-detect .so or .dll) to your php.ini
+4. Restart Apache/XAMPP
+
+STEP 2: Start MongoDB
+----------------------
+1. Open MongoDB Compass
+2. Click "New Connection"
+3. Use connection string: mongodb://localhost:27017
+4. Click "Connect"
+
+STEP 3: Create Database and Collections
+----------------------------------------
+1. In MongoDB Compass, click "Create Database"
+2. Database Name: online_food_ordering_system
+3. First Collection Name: admins
+
+4. Create the following collections by clicking "Create Collection":
+   - admins
+   - users
+   - foods
+   - orders
+
+STEP 4: Create Indexes (Important for Performance)
+---------------------------------------------------
+For each collection, create indexes as follows:
+
+**admins collection:**
+To create: Select collection > Indexes tab > Create Index > Enter:
+{ "username": 1 }
+Check "unique" box
+
+**users collection:**
+Index 1 (unique): { "email": 1 }
+Index 2: { "username": 1 }
+
+**foods collection:**
+Index 1: { "active": 1 }
+Index 2: { "title": 1 }
+
+**orders collection:**
+Index 1: { "uID": 1 }
+Index 2: { "foodID": 1 }
+Index 3: { "status": 1 }
+Index 4: { "order_date": -1 }
+
+STEP 5: Insert Sample Admin User
+---------------------------------
+1. In MongoDB Compass, select "admins" collection
+2. Click "Add Data" > "Insert Document"
+3. Paste this JSON (or use the MongoDB shell):
+
+{
+  "username": "admin",
+  "password": "21232f297a57a5a743894a0e4a801fc3"
+}
+
+Note: This creates an admin with:
+- Username: admin
+- Password: admin (MD5 hashed: 21232f297a57a5a743894a0e4a801fc3)
+
+STEP 6: MongoDB Schema Structure
+---------------------------------
+
+**admins collection:**
+{
+  "_id": ObjectId (auto-generated),
+  "username": String,
+  "password": String (MD5 hashed)
+}
+
+**users collection:**
+{
+  "_id": ObjectId (auto-generated),
+  "username": String,
+  "email": String,
+  "address": String,
+  "password": String (MD5 hashed)
+}
+
+**foods collection:**
+{
+  "_id": ObjectId (auto-generated),
+  "title": String,
+  "description": String,
+  "price": Number (Float),
+  "image_name": String,
+  "active": String ("Yes" or "No")
+}
+
+**orders collection:**
+{
+  "_id": ObjectId (auto-generated),
+  "foodID": String (MongoDB ObjectId as string),
+  "quantity": Number (Integer),
+  "total": Number (Float),
+  "order_date": String (DateTime format),
+  "status": String ("Ordered", "On Delivery", "Delivered", "Cancelled"),
+  "uID": String (MongoDB ObjectId as string)
+}
+
+STEP 7: Update Configuration
+-----------------------------
+The config/constants.php file has been updated with MongoDB connection.
+Connection settings:
+- Host: localhost
+- Port: 27017
+- Database: online_food_ordering_system
+
+STEP 8: Test the Connection
+----------------------------
+1. Make sure MongoDB is running (check MongoDB Compass)
+2. Run: composer install (in project root directory)
+3. Open your browser
+4. Go to: http://localhost/Online_Food_Ordering_System/admin/login.php
+5. Login with username: admin, password: admin
+6. If successful, the migration is complete!
+
+TROUBLESHOOTING
+---------------
+Error: "Class 'MongoDB\Client' not found"
+Solution: Run 'composer install' in the project directory
+
+Error: "Connection refused"
+Solution: Make sure MongoDB is running. Check MongoDB Compass connection.
+
+Error: "Failed to connect to MongoDB"
+Solution: Verify connection string. Default: mongodb://localhost:27017
+
+Error: "vendor/autoload.php not found"
+Solution: Run 'composer install' to generate vendor directory
+
+IMPORTANT NOTES
+---------------
+1. All table names have changed:
+   - tbl_admin → admins
+   - tbl_users → users
+   - tbl_food → foods
+   - tbl_order → orders
+
+2. Primary keys changed from numeric IDs to MongoDB ObjectId:
+   - adminID → _id
+   - uID → _id
+   - foodID → _id
+   - orderID → _id
+
+3. When referencing other documents (foreign keys), ObjectIds are stored as strings
+
+4. All files have been updated to work with MongoDB
+
+BACKUP RECOMMENDATION
+---------------------
+Before deploying to production:
+1. Backup your current MySQL database (if you had one)
+2. Keep a copy of original files
+3. Test thoroughly in development environment
+
+DATA MIGRATION (if you have existing MySQL data)
+-------------------------------------------------
+If you have existing data in MySQL that you want to migrate:
+1. Export data from MySQL to JSON
+2. Import JSON into MongoDB collections using MongoDB Compass
+3. Make sure ObjectId references are properly converted
+
+NEXT STEPS
+----------
+1. Run: composer install
+2. Start MongoDB
+3. Create collections in MongoDB Compass
+4. Add admin user
+5. Test the application
+
+===========================================
