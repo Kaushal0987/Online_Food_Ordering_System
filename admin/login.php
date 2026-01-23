@@ -1,16 +1,28 @@
-<?php include('../config/constants.php'); ?>
+<?php include('../config/constants.php'); 
 
-<html>
+// Check if remember me cookie exists and pre-fill username
+$remembered_username = '';
+$remember_checked = '';
+if(isset($_COOKIE['admin_username'])) {
+    $remembered_username = $_COOKIE['admin_username'];
+    $remember_checked = 'checked';
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
     <head>
-        <title>Login - Food Order System</title>
-        <link rel="stylesheet" href="../css/admin_style.css">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Admin Login - Food Order System</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <link rel="stylesheet" href="../CSS/admin_style.css">
     </head>
 
     <body>
         
-        <div class="login">
-            <h1 class="text-center">Login</h1>
-            <br><br>
+        <div class="login-container">
+            <h1 class="form-title">Admin Login</h1>
 
             <?php 
                 if(isset($_SESSION['login']))
@@ -25,20 +37,28 @@
                     unset($_SESSION['no-login-message']);
                 }
             ?>
-            <br><br>
 
-            <!-- Login Form Starts HEre -->
-            <form action="" method="POST" class="text-center">
-            Username: <br>
-            <input type="text" name="username" placeholder="Enter Username"><br><br>
+            <!-- Login Form Starts Here -->
+            <form action="" method="POST">
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="text" name="username" placeholder="Email ID" value="<?php echo htmlspecialchars($remembered_username); ?>" required>
+                </div>
 
-            Password: <br>
-            <input type="password" name="password" placeholder="Enter Password"><br><br>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" placeholder="Password" required>
+                </div>
 
-            <input type="submit" name="submit" value="Login" class="btn-primary">
-            <br><br>
+                <div class="remember-me">
+                    <label>
+                        <input type="checkbox" name="remember" <?php echo $remember_checked; ?>> Remember me
+                    </label>
+                </div>
+
+                <input type="submit" name="submit" value="LOGIN" class="btn-login">
             </form>
-            <!-- Login Form Ends HEre -->
+            <!-- Login Form Ends Here -->
         </div>
 
     </body>
@@ -71,6 +91,17 @@
                 $_SESSION['login'] = "<div class='success'>Login Successful.</div>";
                 $_SESSION['user'] = $username; //TO check whether the user is logged in or not and logout will unset it
                 $_SESSION['adminID'] = mongoIdToString($admin['_id']); //Store admin ID for reference
+
+                //5. Handle Remember Me functionality
+                if(isset($_POST['remember']) && $_POST['remember'] == 'on') {
+                    // Set cookie for 30 days
+                    setcookie('admin_username', $username, time() + (30 * 24 * 60 * 60), '/');
+                } else {
+                    // Remove cookie if remember me is not checked
+                    if(isset($_COOKIE['admin_username'])) {
+                        setcookie('admin_username', '', time() - 3600, '/');
+                    }
+                }
 
                 //REdirect to HOme Page/Dashboard
                 header('location:'.SITEURL.'admin/');

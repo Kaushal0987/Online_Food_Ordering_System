@@ -4,9 +4,23 @@
     font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Body with gradient for dashboard pages */
+body {
+    background: linear-gradient(180deg, #4A90E2 0%, #E8B4D9 100%);
+    min-height: 100vh;
+}
+
+/* Override body background for login page only */
+body:has(.login-container) {
+    background: linear-gradient(180deg, #4A90E2 0%, #E8B4D9 100%);
+    min-height: 100vh;
+    position: relative;
+}
+
 .wrapper{
-    padding: 1%;
-    width: 80%;
+    padding: 2%;
+    width: 90%;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
@@ -15,8 +29,8 @@
 }
 
 .clearfix{
-    float: none;
     clear: both;
+    overflow: hidden;
 }
 
 .tbl-full{
@@ -42,9 +56,14 @@ table tr td{
     color: white;
     text-decoration: none;
     font-weight: bold;
+    border-radius: 5px;
+    display: inline-block;
+    transition: all 0.3s ease;
 }
 .btn-primary:hover{
     background-color: #3742fa;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(30, 144, 255, 0.3);
 }
 
 .btn-secondary{
@@ -53,10 +72,14 @@ table tr td{
     color: black;
     text-decoration: none;
     font-weight: bold;
-    /* border-radius: 20%; */
+    border-radius: 5px;
+    display: inline-block;
+    transition: all 0.3s ease;
 }
 .btn-secondary:hover{
     background-color: #2ed573;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(46, 213, 115, 0.3);
 }
 
 .btn-danger{
@@ -65,57 +88,303 @@ table tr td{
     color: white;
     text-decoration: none;
     font-weight: bold;
+    border-radius: 5px;
+    display: inline-block;
+    transition: all 0.3s ease;
 }
 .btn-danger:hover{
     background-color: #ff4757;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(255, 71, 87, 0.3);
 }
 
 .success{
     color: #2ed573;
+    font-weight: 600;
+    font-size: 1.1rem;
 }
 .error{
     color: #ff4757;
+    font-weight: 600;
+    font-size: 1.1rem;
 }
 
 
 /* CSS for Menu */
 .menu{
-    border-bottom: 1px solid grey;
+    background: rgba(135, 180, 230, 0.3);
+    backdrop-filter: blur(10px);
+    border-bottom: 2px solid rgba(74, 144, 226, 0.2);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 0.5rem 0;
 }
 .menu ul{
     list-style-type: none;
+    padding: 0.5rem 0;
+    margin: 0;
 }
 .menu ul li{
-    display: inline;
-    padding: 1%;
+    display: inline-block;
+    padding: 0.5rem 1.2rem;
 }
 .menu ul li a{
     text-decoration: none;
-    font-weight: bold;
-    color: #ff6b81;
+    font-weight: 600;
+    color: #1a3a5c;
+    font-size: 0.95rem;
+    transition: color 0.3s ease;
+    position: relative;
 }
 .menu ul li a:hover{
-    color: #ff4757;
+    color: #0d2847;
+}
+.menu ul li a:after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -5px;
+    left: 50%;
+    background-color: #0d2847;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+.menu ul li a:hover:after {
+    width: 100%;
 }
 
 /* CSS for main-content */
 .main-content{
-    background-color: #f1f2f6;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
     padding: 3% 0;
+    min-height: calc(100vh - 100px);
 }
 
+.main-content h1 {
+    color: #1a3a5c;
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+/* Dashboard Stats Cards */
 .col-4{
-    width: 18%;
-    background-color: white;
-    margin: 1%;
-    padding: 2%;
+    width: calc(25% - 20px);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    margin: 10px;
+    padding: 2.5rem 1.5rem;
     float: left;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-sizing: border-box;
+}
+
+.col-4:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.col-4 h1 {
+    font-size: 3rem;
+    color: #1a3a5c;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.col-4 br {
+    display: none;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 1200px) {
+    .col-4 {
+        width: calc(50% - 20px);
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .wrapper {
+        width: 95%;
+        padding: 1.5%;
+    }
+    
+    .col-4 {
+        width: calc(50% - 20px);
+    }
+    
+    .menu ul li {
+        padding: 0.6rem 1rem;
+    }
+    
+    .menu ul li a {
+        font-size: 0.9rem;
+    }
+    
+    .main-content h1 {
+        font-size: 2rem;
+    }
+    
+    .col-4 h1 {
+        font-size: 2.5rem;
+    }
+    
+    .col-4 {
+        padding: 2rem 1rem;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .col-4 {
+        width: calc(100% - 20px);
+        float: none;
+        margin: 10px auto;
+    }
+    
+    .menu ul li {
+        display: block;
+        padding: 0.5rem 0;
+    }
+    
+    .menu ul li a:after {
+        display: none;
+    }
+    
+    .main-content h1 {
+        font-size: 1.8rem;
+    }
+    
+    .col-4 h1 {
+        font-size: 2.2rem;
+    }
 }
 
 /* CSS for Login */
+.login-container{
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    width: 450px;
+    padding: 3rem 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.login-container .form-title{
+    font-size: 2rem;
+    font-weight: 300;
+    text-align: center;
+    color: #1a3a5c;
+    margin-bottom: 2rem;
+    letter-spacing: 2px;
+}
+
+.login-container form{
+    width: 100%;
+}
+
+.login-container .input-group{
+    padding: 1.5rem 0;
+    position: relative;
+}
+
+.login-container .input-group i{
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #1a3a5c;
+    font-size: 18px;
+}
+
+.login-container input[type="text"],
+.login-container input[type="password"]{
+    color: #1a3a5c;
+    width: 100%;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid rgba(26, 58, 92, 0.3);
+    padding: 12px 0 12px 2.5rem;
+    font-size: 15px;
+    transition: border-color 0.3s ease;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.login-container input[type="text"]:focus,
+.login-container input[type="password"]:focus{
+    background-color: transparent;
+    outline: none;
+    border-bottom: 2px solid #1a3a5c;
+}
+
+.login-container input::placeholder{
+    color: rgba(26, 58, 92, 0.5);
+}
+
+.login-container .remember-me {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 1rem;
+    font-size: 0.85rem;
+}
+
+.login-container .remember-me label {
+    display: flex;
+    align-items: center;
+    color: #1a3a5c;
+    cursor: pointer;
+}
+
+.login-container .remember-me input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+}
+
+.login-container .btn-login{
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 15px 0;
+    border-radius: 8px;
+    outline: none;
+    border: none;
+    width: 100%;
+    background: #0d2847;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1.5rem;
+    text-transform: uppercase;
+}
+
+.login-container .btn-login:hover{
+    background: #1a3a5c;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(13, 40, 71, 0.3);
+}
+
+/* Update body for login page */
+body:has(.login-container) {
+    background: linear-gradient(180deg, #4A90E2 0%, #E8B4D9 100%);
+    min-height: 100vh;
+    position: relative;
+}
+
+/* Keep old login class for backward compatibility but hide it */
 .login{
-    border: 1px solid grey;
-    width: 20%;
-    margin: 10% auto;
-    padding: 2%;
+    display: none;
 }
