@@ -25,10 +25,12 @@ if(isset($_POST['signIn'])){
             exit();
        }
        else{
-        echo "Not Found, Incorrect Email or Password";
+            session_start();
+            $_SESSION['login-error'] = "Incorrect Email or Password";
        }
    } catch (Exception $e) {
-       echo "Login Error: " . $e->getMessage();
+       session_start();
+       $_SESSION['login-error'] = "Login Error: " . $e->getMessage();
    }
 
 }
@@ -39,43 +41,66 @@ if(isset($_POST['signIn'])){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login - MixiFoods</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="<?php echo SITEURL; ?>CSS/style-user.css">
 </head>
 <body>
 
-    <div class="container" id="signIn">
+    <div class="login-wrapper">
+        <!-- Left Side - Login Form -->
+        <div class="login-left">
+            <div class="login-card">
+                <div class="login-form-container">
+                    <div class="logo">
+                        <i class="fas fa-utensils"></i> Wow Foods
+                    </div>
 
-      <h1 class="form-title">Sign In</h1>
+                    <h2>Login</h2>
 
-      <form method="post" action="#" name="signIn" novalidate>
+                    <?php 
+                        if(isset($_SESSION['login-error'])){
+                            echo '<div class="error-message">'.$_SESSION['login-error'].'</div>';
+                            unset($_SESSION['login-error']);
+                        }
+                        
+                        if(isset($_SESSION['login-success'])){
+                            echo '<div class="success-message">'.$_SESSION['login-success'].'</div>';
+                            unset($_SESSION['login-success']);
+                        }
+                    ?>
 
-        <div class="input-group">
-            <i class="fas fa-envelope"></i>
-            <input type="email" name="email" id="email" placeholder="Email" required>
-            <label for="email">Email</label>
-            <div class="error" id="emailError"></div>
+                    <form method="post" action="#" name="signIn" novalidate>
+                        <div class="form-group">
+                            <label for="email">Username</label>
+                            <input type="email" name="email" id="email" placeholder="" required>
+                            <div class="error" id="emailError"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" name="password" id="password" placeholder="" required>
+                            <div class="error" id="passwordError"></div>
+                        </div>
+
+                        <button type="submit" class="login-btn" name="signIn">LOGIN</button>
+
+                    <div class="form-footer">
+                        <a href="<?php echo SITEURL; ?>forgot-password.php" class="forgot-link">Forgot Password?</a>
+                        <a href="<?php echo SITEURL; ?>register.php">Create Account</a>
+                    </div>
+                    </form>
+                </div>
+            </div>
         </div>
 
-        <div class="input-group">
-            <i class="fas fa-lock"></i>
-            <input type="password" name="password" id="password" placeholder="Password" required>
-            <label for="password">Password</label>
-            <div class="error" id="passwordError"></div>
+        <!-- Right Side - Food Image -->
+        <div class="login-right">
+            <img src="<?php echo SITEURL; ?>images/food/Food-Name-7751.jpg" alt="Delicious Food">
         </div>
-
-        <input type="submit" class="btn" value="SignIn" name="signIn">
-
-      </form>
-
-      <div class="links">
-        <p>Don't have account yet?</p>
-        <a href="<?php echo SITEURL; ?>register.php">Sign-up</a>
-      </div>
-
     </div>
-        <script>
+
+    <script>
         document.getElementById('email').addEventListener('keyup', validateEmail);
         document.getElementById('password').addEventListener('keyup', validatePassword);
 
@@ -110,8 +135,14 @@ if(isset($_POST['signIn'])){
             validateEmail();
             validatePassword();
 
-            if (document.querySelector('.error').textContent !== '') {
-                event.preventDefault(); // Prevent form submission if there are validation errors
+            const errors = document.querySelectorAll('.error');
+            let hasError = false;
+            errors.forEach(error => {
+                if(error.textContent !== '') hasError = true;
+            });
+
+            if (hasError) {
+                event.preventDefault();
             }
         });
     </script>
