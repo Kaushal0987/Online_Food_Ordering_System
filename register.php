@@ -1,51 +1,50 @@
-<?php 
-  include('config/constants.php');
+<?php
+include('config/constants.php');
 
-  if(isset($_POST['signUp'])){
-      $userName = trim($_POST['username']);
-      $email = trim($_POST['email']);
-      $address = trim($_POST['address']);
-      $password = md5($_POST['password']);
+if (isset($_POST['signUp'])) {
+    $userName = trim($_POST['username']);
+    $email = trim($_POST['email']);
+    $address = trim($_POST['address']);
+    $password = md5($_POST['password']);
 
-      try {
-          // Get users collection
-          $collection = $conn->selectCollection('users');
-          
-          // Check if email already exists
-          $existingUser = $collection->findOne(['email' => $email]);
-          
-          if($existingUser){
-              $_SESSION['signup-error'] = "Error Signing Up";
-              echo "Email Address Already Exists !";
-          }
-          else{
-              // Insert new user into MongoDB
-              $result = $collection->insertOne([
-                  'username' => $userName,
-                  'email' => $email,
-                  'address' => $address,
-                  'password' => $password
-              ]);
-              
-              if($result->getInsertedCount() > 0){
-                  header("location: login.php");
-              }
-              else{
-                  $_SESSION['signup-error'] = "Error Signing Up";
-                  header("location: signup.php");
-                  echo "Error: Failed to create user";
-              }
-          }
-      } catch (Exception $e) {
-          $_SESSION['signup-error'] = "Error Signing Up";
-          echo "Error: " . $e->getMessage();
-      }
+    try {
+        // Get users collection
+        $collection = $conn->selectCollection('users');
 
-  }
+        // Check if email already exists
+        $existingUser = $collection->findOne(['email' => $email]);
+
+        if ($existingUser) {
+            $_SESSION['signup-error'] = "Error Signing Up";
+            echo "Email Address Already Exists !";
+        } else {
+            // Insert new user into MongoDB
+            $result = $collection->insertOne([
+                'username' => $userName,
+                'email' => $email,
+                'address' => $address,
+                'password' => $password
+            ]);
+
+            if ($result->getInsertedCount() > 0) {
+                header("location: login.php");
+            } else {
+                $_SESSION['signup-error'] = "Error Signing Up";
+                header("location: signup.php");
+                echo "Error: Failed to create user";
+            }
+        }
+    } catch (Exception $e) {
+        $_SESSION['signup-error'] = "Error Signing Up";
+        echo "Error: " . $e->getMessage();
+    }
+
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -53,50 +52,56 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="CSS/style-user.css">
 </head>
+
 <body>
-    <div class="container" id="signup">
+    <!-- Background Image Container -->
+    <div class="login-bg-container"></div>
 
-      <h1 class="form-title">Register</h1>
+    <div class="login-wrapper center-layout">
+        <div class="login-card centered-card" style="max-width: 500px;">
+            <div class="login-form-container">
+                <div class="logo">
+                    <i class="fas fa-utensils"></i> Wow Foods
+                </div>
 
-      <form method="post" action="#" name="signUp" novalidate>
+                <h2>Register</h2>
 
-        <div class="input-group">
-           <i class="fas fa-user"></i>
-           <input type="text" name="username" id="username" placeholder="User Name" required>
-           <label for="username">Username</label>
-           <div class="error" id="usernameError"></div>
+                <form method="post" action="#" name="signUp" novalidate>
+
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" name="username" id="username" placeholder="" required>
+                        <div class="error" id="usernameError"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" name="email" id="email" placeholder="" required>
+                        <div class="error" id="emailError"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <input type="text" name="address" id="address" placeholder="" required>
+                        <div class="error" id="addressError"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" name="password" id="password" placeholder="" required>
+                        <div class="error" id="passwordError"></div>
+                    </div>
+
+                    <input type="submit" class="login-btn" value="SIGN UP" name="signUp">
+
+                </form>
+
+                <div class="form-footer">
+                    <p>Already Have Account?</p>
+                    <a href="<?php echo SITEURL; ?>login.php">Sign In</a>
+                </div>
+            </div>
         </div>
-        
-        <div class="input-group">
-          <i class="fas fa-envelope"></i>
-          <input type="email" name="email" id="email" placeholder="Email" required>
-          <label for="email">Email</label>
-          <div class="error" id="emailError"></div>
-        </div>
-
-        <div class="input-group">
-            <i class="fa-solid fa-address-book"></i>
-            <input type="text" name="address" id="address" placeholder="Address" required>
-            <label for="address">Address</label>
-            <div class="error" id="addressError"></div>
-        </div>
-
-        <div class="input-group">
-            <i class="fas fa-lock"></i>
-            <input type="password" name="password" id="password" placeholder="Password" required>
-            <label for="password">Password</label>
-            <div class="error" id="passwordError"></div>
-        </div>
-
-       <input type="submit" class="btn" value="SignUp" name="signUp">
-
-      </form>
-
-      <div class="links">
-        <p>Already Have Account ?</p>
-        <a href="<?php echo SITEURL; ?>login.php">Sign-in</a>
-      </div>
-
     </div>
 
     <script>
@@ -160,7 +165,7 @@
             }
         }
 
-        document.querySelector('form[name="signUp"]').addEventListener('submit', function(event) {
+        document.querySelector('form[name="signUp"]').addEventListener('submit', function (event) {
             validateUsername();
             validateEmail();
             validateAddress();
@@ -172,4 +177,5 @@
         });
     </script>
 </body>
+
 </html>

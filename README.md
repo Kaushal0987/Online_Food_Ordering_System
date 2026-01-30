@@ -1,207 +1,69 @@
-# Online Food Ordering System - MongoDB Edition
+# Online Food Ordering System
 
-A complete PHP-based online food ordering system migrated from MySQL to MongoDB.
+A comprehensive web-based food ordering system built with PHP and MongoDB. This project offers a seamless experience for users to order food online and for admins to manage the restaurant operations.
 
 ## 🚀 Features
 
-- **User Management**: Registration, login, and profile management
-- **Admin Dashboard**: Complete admin panel for managing the system
-- **Food Management**: Add, update, delete, and search food items
-- **Order Management**: Place orders, track status, and manage deliveries
-- **Revenue Tracking**: Real-time revenue calculation
-- **Image Upload**: Support for food images
-- **Search Functionality**: Search foods by title or description
+### User Features
+- **Modern UI**: Responsive and elegant design with a dynamic food slider.
+- **Authentication**: Secure Login, Registration, and Forgot Password functionality.
+- **Browse Menu**: View available food items with prices and descriptions directly on the homepage.
+- **Cart System**: 
+  - Add items to cart.
+  - Floating cart button for quick access.
+  - Manage cart quantities.
+- **Checkout**: Simple checkout process to confirm order details and delivery address.
+- **Order History**: Track order status (Ordered, On Delivery, Delivered, Cancelled) in "My Orders".
 
-## 📋 Requirements
+### Admin Features
+- **Dashboard**: Overview of total users, foods, orders, and revenue.
+- **Manage Foods**: Add, update, and delete food items (with image upload).
+- **Manage Orders**: View recent orders and update order status (Delivered, Cancelled, etc.) directly from the dashboard.
 
-- PHP 7.4 or higher
-- MongoDB 4.0 or higher
-- MongoDB Compass (recommended for database management)
-- Composer (for dependency management)
-- Apache/XAMPP server
+## 🛠️ Technology Stack
 
-## 🔧 Installation
+- **Frontend**: HTML5, CSS3 (Custom Responsive Styling), JavaScript
+- **Backend**: Core PHP
+- **Database**: MongoDB (NoSQL)
+- **Web Server**: Apache (via XAMPP)
 
-### 1. Install Dependencies
+## 📦 Setup and Installation
 
-```bash
-composer install
-```
+1.  **Prerequisites**:
+    - Install [XAMPP](https://www.apachefriends.org/) (for PHP & Apache).
+    - Install [MongoDB Community Server](https://www.mongodb.com/try/download/community).
+    - Install the **PHP MongoDB Extension**:
+        - Download the `.dll` from PECL.
+        - Add `extension=php_mongodb.dll` to your `php.ini` file.
 
-### 2. Setup MongoDB
+2.  **Installation**:
+    - Clone or download this project.
+    - Move the project folder to your `htdocs` directory (e.g., `C:\xampp\htdocs\Online_Food_Ordering_System`).
 
-1. Install MongoDB from [mongodb.com](https://www.mongodb.com/try/download/community)
-2. Install MongoDB Compass for GUI management
-3. Start MongoDB service
+3.  **Database Configuration**:
+    - provided on MONGODB_SETUP.txt file.
 
-### 3. Create Database
+4.  **Run the Project**:
+    - Start Apache and MongoDB.
+    - Open your browser and visit: `http://localhost/Online_Food_Ordering_System/`
 
-Open MongoDB Compass and create:
-- Database: `online_food_ordering_system`
-- Collections: `admins`, `users`, `foods`, `orders`
+## 📂 Project Structure
 
-### 4. Add Initial Admin
+- `admin/`: Admin control panel stats and management logic.
+- `config/`: Database connection and constants.
+- `CSS/`: Custom styles (`style.css` for main, `style-user.css` for auth pages).
+- `images/`: Stores food images and site assets.
+- `particle-front/`: Reusable header/menu components.
+- `del/`: Contains unused/legacy files.
 
-In MongoDB Compass, insert into `admins` collection:
+## 📸 Screenshots
 
-```json
-{
-  "username": "admin",
-  "password": "21232f297a57a5a743894a0e4a801fc3"
-}
-```
-
-Login credentials: **admin** / **admin**
-
-### 5. Configure Site URL
-
-Edit `config/constants.php` and update:
-```php
-define('SITEURL', 'http://localhost/Online_Food_Ordering_System/');
-```
-
-## 🎯 Usage
-
-### Admin Panel
-Access: `http://localhost/Online_Food_Ordering_System/admin/login.php`
-
-Features:
-- Dashboard with statistics
-- Manage admins, users, foods, and orders
-- Upload food images
-- Track orders and revenue
-
-### User Site
-Access: `http://localhost/Online_Food_Ordering_System/`
-
-Features:
-- User registration and login
-- Browse food menu
-- Search for food items
-- Place orders
-
-## 📁 Project Structure
-
-```
-Online_Food_Ordering_System/
-├── admin/                  # Admin panel files
-│   ├── add-*.php          # Add operations
-│   ├── update-*.php       # Update operations
-│   ├── delete-*.php       # Delete operations
-│   ├── manage-*.php       # List/view operations
-│   └── partials/          # Reusable components
-├── config/
-│   └── constants.php      # MongoDB configuration
-├── CSS/                   # Stylesheets
-├── images/                # Uploaded images
-│   ├── food/             # Food images
-│   └── category/         # Category images
-├── JS/                    # JavaScript files
-├── particle-front/        # Frontend components
-├── vendor/                # Composer dependencies
-├── composer.json          # Dependency configuration
-├── QUICK_START.txt        # Quick setup guide
-├── MONGODB_SETUP.txt      # Detailed setup instructions
-└── MIGRATION_SUMMARY.txt  # Migration details
-```
-
-## 🗄️ Database Schema
-
-### Collections
-
-#### admins
-- `_id`: ObjectId (auto-generated)
-- `username`: String
-- `password`: String (MD5 hashed)
-
-#### users
-- `_id`: ObjectId (auto-generated)
-- `username`: String
-- `email`: String (unique)
-- `address`: String
-- `password`: String (MD5 hashed)
-
-#### foods
-- `_id`: ObjectId (auto-generated)
-- `title`: String
-- `description`: String
-- `price`: Number (Float)
-- `image_name`: String
-- `active`: String ("Yes" or "No")
-
-#### orders
-- `_id`: ObjectId (auto-generated)
-- `foodID`: String (ObjectId reference)
-- `quantity`: Number (Integer)
-- `total`: Number (Float)
-- `order_date`: String (DateTime)
-- `status`: String ("Ordered", "On Delivery", "Delivered", "Cancelled")
-- `uID`: String (ObjectId reference)
-
-## 🔐 Security Notes
-
-⚠️ **Important for Production:**
-1. Change default admin password immediately
-2. Upgrade from MD5 to bcrypt for password hashing
-3. Enable MongoDB authentication
-4. Use environment variables for credentials
-5. Implement input validation and sanitization
-6. Use SSL/TLS for database connections
-
-## 📚 Documentation Files
-
-- **QUICK_START.txt** - Get started in 5 minutes
-- **MONGODB_SETUP.txt** - Detailed setup instructions
-- **MIGRATION_SUMMARY.txt** - Complete list of changes
-
-## 🐛 Troubleshooting
-
-### MongoDB Connection Issues
-```
-Error: "Class 'MongoDB\Client' not found"
-Solution: Run composer install
-```
-
-```
-Error: "Connection refused"
-Solution: Ensure MongoDB is running (check MongoDB Compass)
-```
-
-### Composer Issues
-```
-Error: "vendor/autoload.php not found"
-Solution: Run composer install in project root
-```
-
-## 🔄 Migration from MySQL
-
-This project was successfully migrated from MySQL to MongoDB. Key changes:
-
-- All MySQL queries converted to MongoDB operations
-- Numeric auto-increment IDs replaced with MongoDB ObjectIds
-- Support for flexible schema and document-based storage
-- Improved scalability and performance
-
-See `MIGRATION_SUMMARY.txt` for complete details.
-
-## 📝 License
-
-This project is open source and available for educational purposes.
-
-## 🤝 Contributing
-
-Feel free to fork this project and submit pull requests for improvements.
-
-## 📧 Support
-
-For issues and questions:
-1. Check troubleshooting section
-2. Review documentation files
-3. Verify MongoDB connection and setup
+![homepage](image.png)
+![menu](image-1.png)
+![cart](image-2.png)
+![checkout](image-3.png)
+![order](image-4.png)
+![dashboard](image-5.png)
 
 ---
-
-**Version**: 2.0 (MongoDB Edition)  
-**Last Updated**: January 2026  
-**Database**: MongoDB  
-**Language**: PHP 7.4+
+**Developed by Kaushal Joshi**
