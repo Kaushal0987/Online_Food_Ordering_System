@@ -54,7 +54,6 @@ A comprehensive web-based food ordering system built with PHP and MongoDB. This 
 - `CSS/`: Custom styles (`style.css` for main, `style-user.css` for auth pages).
 - `images/`: Stores food images and site assets.
 - `particle-front/`: Reusable header/menu components.
-- `del/`: Contains unused/legacy files.
 
 ## 📸 Screenshots
 
