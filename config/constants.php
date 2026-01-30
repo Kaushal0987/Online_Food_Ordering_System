@@ -10,20 +10,19 @@
         session_start();
     }
 
-    //Create Constants to Store Non Repeating Values
+    // Create Constants to Store Non Repeating Values
     if (!defined('SITEURL')) {
-        define('SITEURL', 'http://localhost/Online_Food_Ordering_System/');
+        define('SITEURL', getenv('SITEURL') ?: 'http://localhost/Online_Food_Ordering_System/');
     }
     
     // MongoDB Configuration
-    if (!defined('MONGODB_HOST')) {
-        define('MONGODB_HOST', 'localhost');
-    }
-    if (!defined('MONGODB_PORT')) {
-        define('MONGODB_PORT', '27017');
-    }
+    $mongodb_uri = getenv('MONGODB_URI');
+    $mongodb_host = getenv('MONGODB_HOST') ?: 'localhost';
+    $mongodb_port = getenv('MONGODB_PORT') ?: '27017';
+    $mongodb_db = getenv('MONGODB_DATABASE') ?: 'online_food_ordering_system';
+
     if (!defined('MONGODB_DATABASE')) {
-        define('MONGODB_DATABASE', 'online_food_ordering_system');
+        define('MONGODB_DATABASE', $mongodb_db);
     }
     
     // MongoDB Connection
@@ -37,7 +36,11 @@
         }
         
         // Create MongoDB client
-        $mongoClient = new MongoDB\Client("mongodb://" . MONGODB_HOST . ":" . MONGODB_PORT);
+        if ($mongodb_uri) {
+            $mongoClient = new MongoDB\Client($mongodb_uri);
+        } else {
+            $mongoClient = new MongoDB\Client("mongodb://" . $mongodb_host . ":" . $mongodb_port);
+        }
         
         // Select database
         $database = $mongoClient->selectDatabase(MONGODB_DATABASE);
@@ -46,7 +49,7 @@
         $conn = $database;
         
     } catch (Exception $e) {
-        die("MongoDB Connection Error: " . $e->getMessage() . "<br>Make sure MongoDB is running and accessible.");
+        die("MongoDB Connection Error: " . $e->getMessage() . "<br>Make sure MongoDB is running and accessible. If on Vercel, check MONGODB_URI environment variable.");
     }
     
     // Helper function to convert MongoDB ObjectId to string
